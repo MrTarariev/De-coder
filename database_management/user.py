@@ -14,4 +14,3 @@ class User:
             self.id = result
             return True
         return False
-
