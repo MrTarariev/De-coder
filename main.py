@@ -3,6 +3,7 @@ from flask import Flask, request
 import logging
 import json
 
+
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 db_control = DatabaseControl("database_management/money_database.db")
@@ -55,4 +56,4 @@ def main():
 
 
 if __name__ == '__main__':
-    app.run(port=500, host='127.0.0.1')
+    app.run(port=5000, host='127.0.0.1')
