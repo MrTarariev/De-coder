@@ -6,10 +6,12 @@ class User:
         self.name = name
         self.id = None
 
-    def in_database(self, database: sqlite3.Connection):
-        result = database.cursor().execute(
+    def in_database(self, database: str):
+        connection = sqlite3.connect(database)
+        result = connection.cursor().execute(
             f"SELECT id FROM users_table WHERE name = '{self.name}'"
         ).fetchall()
+        connection.close()
         if result:
             self.id = result
             return True

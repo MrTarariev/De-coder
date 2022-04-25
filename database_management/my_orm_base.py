@@ -5,20 +5,23 @@ import datetime
 
 class DatabaseControl:
     def __init__(self, database_name):
-        self.connection = sqlite3.connect(database_name)
+        self.db_name = database_name
         self.user = None
 
     def set_user(self, name: str):
         self.user = User(name)
-        if self.user.in_database(self.connection):
+        if self.user.in_database(self.db_name):
             pass
         else:
             self.__add_user(name)
 
     def __add_user(self, name: str):
-        self.connection.cursor().execute(
-            f"'INSERT INTO users(name) VALUES ('{name}')'"
+        connection = sqlite3.connect(self.db_name)
+        connection.cursor().execute(
+            f"INSERT INTO users_table(name) VALUES('{name}')"
         )
+        connection.commit()
+        connection.close()
 
     def get_spending(self, username: str = None, category: str = None,
                      day: str = None, month: str = None, year: str = None):
@@ -39,8 +42,10 @@ class DatabaseControl:
         else:
             date = reversed(f'{datetime.date.today()}')
 
+        connection = sqlite3.connect(self.db_name)
+
         if not category:
-            query_result = self.connection.cursor().execute(
+            query_result = connection.cursor().execute(
                 f"""SELECT sum 
 FROM main_table INNER JOIN users_table 
 ON main_table.user_id = users_table.id 
@@ -51,7 +56,7 @@ AND users_table.name = '{username}'
 AND main_table.date LIKE '{date}'"""
             ).fetchall()
         else:
-            query_result = self.connection.cursor().execute(
+            query_result = connection.cursor().execute(
                 f"""SELECT sum 
 FROM main_table INNER JOIN users_table 
 ON main_table.user_id = users_table.id 
@@ -64,6 +69,7 @@ AND users_table.name = '{username}'
 AND main_table.date LIKE '{date}'
 AND categories.category = '{category}'"""
             )
+            connection.close()
         result = 0
         for line in query_result:
             result += line[0]
@@ -74,21 +80,24 @@ AND categories.category = '{category}'"""
         if not username:
             username = self.user.name
         if day and not (month or year):
-            date = f'{day}.%'
+            date = f'{day}.{datetime.date.today().month}.' \
+                   f'{datetime.date.today().year}'
         elif day and month and not year:
-            date = f'{day}.{month}.%'
+            date = f'{day}.{month}.{datetime.date.today().year}'
         elif day and month and year:
             date = '.'.join([day, month, year])
         elif not day and month and not year:
-            date = f'%.{month}.%'
+            date = f'%.{month}.{datetime.date.today().year}'
         elif not day and month and year:
             date = f'%.{month}.{year}'
         elif not day and not month and year:
             date = f'%.{year}'
         else:
-            date = f'{datetime.date.today()}'
+            date = f'{reversed(str(datetime.date.today()))}'
 
-        query_result = self.connection.cursor().execute(
+        connection = sqlite3.connect(self.db_name)
+
+        query_result = connection.cursor().execute(
             f"""SELECT sum 
         FROM main_table INNER JOIN users_table 
         ON main_table.user_id = users_table.id 
@@ -98,6 +107,7 @@ AND categories.category = '{category}'"""
         AND users_table.name = '{username}' 
         AND main_table.date LIKE '{date}'"""
         ).fetchall()
+        connection.close()
         result = 0
         for line in query_result:
             result += line[0]
@@ -107,20 +117,32 @@ AND categories.category = '{category}'"""
                      category: str = 'Другое'):
         if username:
             self.set_user(username)
-        self.connection.cursor().execute(
+        connection = sqlite3.connect(self.db_name)
+        connection.cursor().execute(
             f"""INSERT INTO 
 main_table(user_id, date, operation_type, sum, category)
 VALUES 
 ({self.user.id}, '{reversed(f'datetime.date.today()')}', 2, {summa}, 
 '{category}')"""
         )
-        self.connection.commit()
+        connection.commit()
+        connection.close()
 
     def add_earning(self, summa: int, username: str = None):
         if username:
             self.set_user(username)
-        self.connection.cursor().execute(
+        connection = sqlite3.connect(self.db_name)
+        connection.cursor().execute(
             f"""INSERT INTO main_table(user_id, date, operation_type, sum)
 VALUES ({self.user.id}, '{reversed(f'{datetime.date.today()}')}', 1, {summa})"""
         )
-        self.connection.commit()
+        connection.commit()
+        connection.close()
+
+    def get_category(self, category_id):
+        connection = sqlite3.connect(self.db_name)
+        result = connection.cursor().execute(
+            f"""SELECT category FROM categories WHERE id = {category_id}"""
+        ).fetchall()[0]
+        connection.close()
+        return result
