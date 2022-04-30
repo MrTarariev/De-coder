@@ -28,13 +28,14 @@ class DatabaseControl:
         if not username:
             username = self.user.name
         if day and not (month or year):
-            date = f'{day}.%'
+            date = f'{day}.{datetime.date.today().month}.' \
+                   f'{datetime.date.today().year}'
         elif day and month and not year:
-            date = f'{day}.{month}.%'
+            date = f'{day}.{month}.{datetime.date.today().year}'
         elif day and month and year:
             date = '.'.join([day, month, year])
         elif not day and month and not year:
-            date = f'%.{month}.%'
+            date = f'%.{month}.{datetime.date.today().year}'
         elif not day and month and year:
             date = f'%.{month}.{year}'
         elif not day and not month and year:
@@ -93,7 +94,7 @@ AND categories.category = '{category}'"""
         elif not day and not month and year:
             date = f'%.{year}'
         else:
-            date = f'{reversed(str(datetime.date.today()))}'
+            date = reversed(f'{datetime.date.today()}')
 
         connection = sqlite3.connect(self.db_name)
 
