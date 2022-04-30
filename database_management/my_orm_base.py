@@ -114,7 +114,7 @@ AND categories.category = '{category}'"""
         return result
 
     def add_spending(self, summa: int, username: str = None,
-                     category: str = 'Другое'):
+                     category: int = 7):
         if username:
             self.set_user(username)
         connection = sqlite3.connect(self.db_name)
@@ -123,7 +123,7 @@ AND categories.category = '{category}'"""
 main_table(user_id, date, operation_type, sum, category)
 VALUES 
 ({self.user.id}, '{reversed(f'datetime.date.today()')}', 2, {summa}, 
-'{category}')"""
+{category})"""
         )
         connection.commit()
         connection.close()
@@ -143,6 +143,6 @@ VALUES ({self.user.id}, '{reversed(f'{datetime.date.today()}')}', 1, {summa})"""
         connection = sqlite3.connect(self.db_name)
         result = connection.cursor().execute(
             f"""SELECT category FROM categories WHERE id = {category_id}"""
-        ).fetchall()[0]
+        ).fetchall()[0][0]
         connection.close()
         return result

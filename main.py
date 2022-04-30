@@ -50,8 +50,7 @@ def main():
         except ValueError:
             if 'потратил' in word or 'расходы' in word:
                 spending = True
-            elif 'сколько' or 'Сколько' in word or 'расходы' in word \
-                    or 'доходы' in word:
+            elif word == 'Сколько' or word == 'расходы' or word == 'доходы':
                 asking = True
             elif word in categories:
                 category = categories.index(word) + 1
@@ -64,42 +63,50 @@ def main():
                     if len(date[-1]) > 2:
                         date_dict['month'], date_dict['year'] = date[0], date[1]
             previous_word = word
-    if not asking:
-        if spending:
-            if not category:
-                category = 7
-            category = db_control.get_category(category)
-            db_control.add_spending(summa, category=category)
-        else:
-            db_control.add_earning(summa)
-        response['text'] = 'Хорошо, записала'
+    if not summa:
+        response['response']['text'] = 'Извините, я вас не поняла.'
     else:
-        if spending:
-            if not category:
-                if not date:
-                    summa = db_control.get_spending()
+        if not asking:
+            if spending:
+                if not category or category not in categories:
+                    category = 7
                 else:
-                    summa = db_control.get_spending(day=date_dict['day'],
-                                                    month=date_dict['month'],
-                                                    year=date_dict['year'])
+                    category = categories.index(category) + 1
+                db_control.add_spending(summa, category=category)
             else:
-                category = db_control.get_category(category)
-                if not date:
-                    summa = db_control.get_spending(category=category)
-                else:
-                    summa = db_control.get_spending(category=category,
-                                                    day=date_dict['day'],
-                                                    month=date_dict['month'],
-                                                    year=date_dict['year'])
-            response['text'] = f'По моим данным, вы потратили {summa} руб.'
+                db_control.add_earning(summa)
+            response['response']['text'] = 'Хорошо, записала'
         else:
-            if not date:
-                summa = db_control.get_earnings()
+            if spending:
+                if not category:
+                    if not date:
+                        summa = db_control.get_spending()
+                    else:
+                        summa = db_control.get_spending(
+                            day=date_dict['day'],
+                            month=date_dict['month'],
+                            year=date_dict['year']
+                        )
+                else:
+                    category = db_control.get_category(category)
+                    if not date:
+                        summa = db_control.get_spending(category=category)
+                    else:
+                        summa = db_control.get_spending(
+                            category=category,
+                            day=date_dict['day'],
+                            month=date_dict['month'],
+                            year=date_dict['year']
+                        )
+                response['text'] = f'По моим данным, вы потратили {summa} руб.'
             else:
-                summa = db_control.get_earnings(day=date_dict['day'],
-                                                month=date_dict['month'],
-                                                year=date_dict['year'])
-            response['text'] = f'По моим данным, вы заработали {summa} руб.'
+                if not date:
+                    summa = db_control.get_earnings()
+                else:
+                    summa = db_control.get_earnings(day=date_dict['day'],
+                                                    month=date_dict['month'],
+                                                    year=date_dict['year'])
+                response['text'] = f'По моим данным, вы заработали {summa} руб.'
 
     logging.info(f'Response:  {response!r}')
 

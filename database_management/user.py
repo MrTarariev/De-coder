@@ -10,7 +10,7 @@ class User:
         connection = sqlite3.connect(database)
         result = connection.cursor().execute(
             f"SELECT id FROM users_table WHERE name = '{self.name}'"
-        ).fetchall()
+        ).fetchall()[0][0]
         connection.close()
         if result:
             self.id = result
