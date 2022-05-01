@@ -28,13 +28,14 @@ class DatabaseControl:
         if not username:
             username = self.user.name
         if day and not (month or year):
-            date = f'{day}.%'
+            date = f'{day}.{datetime.date.today().month}.' \
+                   f'{datetime.date.today().year}'
         elif day and month and not year:
-            date = f'{day}.{month}.%'
+            date = f'{day}.{month}.{datetime.date.today().year}'
         elif day and month and year:
             date = '.'.join([day, month, year])
         elif not day and month and not year:
-            date = f'%.{month}.%'
+            date = f'%.{month}.{datetime.date.today().year}'
         elif not day and month and year:
             date = f'%.{month}.{year}'
         elif not day and not month and year:
@@ -93,7 +94,7 @@ AND categories.category = '{category}'"""
         elif not day and not month and year:
             date = f'%.{year}'
         else:
-            date = f'{reversed(str(datetime.date.today()))}'
+            date = reversed(f'{datetime.date.today()}')
 
         connection = sqlite3.connect(self.db_name)
 
@@ -114,7 +115,7 @@ AND categories.category = '{category}'"""
         return result
 
     def add_spending(self, summa: int, username: str = None,
-                     category: str = 'Другое'):
+                     category: int = 7):
         if username:
             self.set_user(username)
         connection = sqlite3.connect(self.db_name)
@@ -123,7 +124,7 @@ AND categories.category = '{category}'"""
 main_table(user_id, date, operation_type, sum, category)
 VALUES 
 ({self.user.id}, '{reversed(f'datetime.date.today()')}', 2, {summa}, 
-'{category}')"""
+{category})"""
         )
         connection.commit()
         connection.close()
@@ -143,6 +144,6 @@ VALUES ({self.user.id}, '{reversed(f'{datetime.date.today()}')}', 1, {summa})"""
         connection = sqlite3.connect(self.db_name)
         result = connection.cursor().execute(
             f"""SELECT category FROM categories WHERE id = {category_id}"""
-        ).fetchall()[0]
+        ).fetchall()[0][0]
         connection.close()
         return result
